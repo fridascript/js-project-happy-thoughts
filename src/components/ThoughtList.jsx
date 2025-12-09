@@ -13,7 +13,7 @@ const ThoughtList = ({ thoughts, onLike }) => {
     <List>
       {thoughts.map((thought) => (
         <ThoughtCard
-          key={thought.id}
+          key={thought._id}
           thought={thought}
           onLike={onLike}
         />

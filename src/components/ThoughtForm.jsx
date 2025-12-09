@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-// --- Styled Components ---
+// styling for components
 
 const PageWrapper = styled.div`
   display: flex;
   justify-content: center;  
   align-items: center;                  
+  width: 100%;
 `;
 
 const Form = styled.form`
@@ -14,57 +15,79 @@ const Form = styled.form`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 40%;
-  height: 260px;
-  margin: 60px 30px;
+
+  width: 90%;
+  max-width: 600px;
+  height: auto;
+  padding: 20px;
+  margin: 40px 10px;
+
   background: #e8e7e7;
   border: 2px solid black;
   box-shadow: 10px 10px;
+
+  @media (min-width: 768px) {
+    width: 70%;
+  }
+
+  @media (min-width: 1024px) {
+    width: 50%;
+  }
 `;
 
 const Title = styled.h2`
-font-size: 16px;
-font-weight: normal;
-display: flex;
-align-self: flex-start;
-margin-left: 30px;
-margin-bottom: 5px;
-margin-top: 5px;
-;`
+  font-size: 14px;
+  align-self: flex-start;
+  margin-left: 20px;
 
+  @media (min-width: 768px) {
+    font-size: 16px;
+  }
+`;
 
 const TextArea = styled.textarea`
   width: 85%;
-  min-height: 100px;
+  min-height: 90px;
   padding: 12px;
-  font-size: 16px;
-`;
+  font-size: 14px;
 
+  @media (min-width: 768px) {
+    min-height: 110px;
+    font-size: 16px;
+  }
+`;
 
 const Button = styled.button`
   align-self: flex-start;
-  margin-top: 10px;
-  margin-left: 30px;
+  margin-top: 15px;
+  margin-left: 20px;
   background: #ffbbbb;
   color: #000000;
   border: none;
   padding: 10px 20px;
   font-size: 14px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   border-radius: 12px;
   cursor: pointer;
- transition: transform 0.2s ease;
+
+  transition: transform 0.2s ease;
+
   &:hover {
-  transform: scale(1.1); 
+    transform: scale(1.1);
+  }
+
+  @media (min-width: 768px) {
+    font-size: 15px;
   }
 `;
 
+
+//component 
 const ThoughtForm = ({ onAddThought }) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (message.trim() === "") return; // optional: ignore empty messages
+    if (message.trim() === "") return; //ignores empty messages
     onAddThought(message);
     setMessage("");
   };

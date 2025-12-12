@@ -45,6 +45,9 @@ const Message = styled.p`
   margin: 0;
   font-size: 18px;
   padding: 20px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 
   @media (min-width: 768px) {
     font-size: 20px;

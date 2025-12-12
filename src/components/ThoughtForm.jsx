@@ -81,7 +81,7 @@ const Button = styled.button`
 `;
 
 
-//component 
+//component for entering the happy thought
 const ThoughtForm = ({ onAddThought }) => {
   const [message, setMessage] = useState("");
 

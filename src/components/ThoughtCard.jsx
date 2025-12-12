@@ -95,7 +95,7 @@ const LikeButton = styled.span`
 `;
 
 
-//component 
+//component for the displayed message 
 
 const ThoughtCard = ({ thought, onLike }) => {
   const handleLike = () => onLike(thought._id);

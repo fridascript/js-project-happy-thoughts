@@ -1,1 +1,1 @@
-Please include your Netlify link here.
+Netlify link: https://happy-thoughts-app-frida.netlify.app/

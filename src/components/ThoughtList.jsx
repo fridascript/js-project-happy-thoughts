@@ -2,6 +2,8 @@ import React from "react";
 import styled from "styled-components";
 import ThoughtCard from "./ThoughtCard";
 
+
+// the list of messages 
 const List = styled.div`
   display: flex;
   flex-direction: column;

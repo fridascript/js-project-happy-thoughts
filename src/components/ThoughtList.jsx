@@ -8,7 +8,7 @@ const List = styled.div`
   gap: 15px;
 `;
 
-const ThoughtList = ({ thoughts, onLike, onDelete, onUpdate }) => {
+const ThoughtList = ({ thoughts, onLike, onDelete, onUpdate, user }) => {
   return (
     <List>
       {thoughts.map((thought) => (
@@ -18,6 +18,7 @@ const ThoughtList = ({ thoughts, onLike, onDelete, onUpdate }) => {
           onLike={onLike}
           onDelete={onDelete}
           onUpdate={onUpdate}
+          user={user} 
         />
       ))}
     </List>

@@ -21,6 +21,7 @@ export const App = () => {
      fetch(`${API_BASE}/thoughts?sort=date`)
       .then((response) => response.json())
       .then((data) => {
+        console.log(data.response[0]);
         setThoughts(data.response);
       })
       .catch((error) => {
@@ -49,6 +50,7 @@ export const App = () => {
           data.accessToken
         );
         setUser({
+          userId: data.id,
           name,
           email,
         });
@@ -74,7 +76,7 @@ export const App = () => {
       if (data.success && data.response?.accessToken) {
         setAccessToken(data.response.accessToken);
         localStorage.setItem("accessToken", data.response.accessToken);
-        setUser({ name: data.response.name, email: data.response.email });
+        setUser({ userId: data.response.userId, name: data.response.name, email: data.response.email });
       } else {
         console.error("Login failed:", data.message || "Invalid credentials");
       }
@@ -202,6 +204,7 @@ export const App = () => {
             onLike={likeThought}
             onUpdate={updateThought}
             onDelete={deleteThought}
+            user={user}  
             isLoggedIn
           />
         </>

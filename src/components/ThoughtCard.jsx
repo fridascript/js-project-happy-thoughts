@@ -99,7 +99,8 @@ const ErrorText = styled.p`
   padding: 0 20px;
 `;
 
-const ThoughtCard = ({ thought, onLike, onDelete, onUpdate }) => {
+const ThoughtCard = ({ thought, onLike, onDelete, onUpdate, user }) => {
+  const isOwner = user && thought.user === user.userId;
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(thought.message);
   const [error, setError] = useState(null);
@@ -109,7 +110,7 @@ const ThoughtCard = ({ thought, onLike, onDelete, onUpdate }) => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`https://happy-thoughts-api-frida.onrender.com/thoughts/${thought._id}`, {
+      const res = await fetch(`https://js-project-api-7sb0.onrender.com/thoughts/${thought._id}`, {
         method: "DELETE",
         headers: { Authorization: token }
       });
@@ -123,7 +124,7 @@ const ThoughtCard = ({ thought, onLike, onDelete, onUpdate }) => {
   const handleUpdate = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`https://happy-thoughts-api-frida.onrender.com/thoughts/${thought._id}`, {
+      const res = await fetch(`https://js-project-api-7sb0.onrender.com/thoughts/${thought._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -149,12 +150,17 @@ const ThoughtCard = ({ thought, onLike, onDelete, onUpdate }) => {
             <EditInput
               value={editedMessage}
               onChange={(e) => setEditedMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleUpdate();
+                }
+              }}
               rows={3}
             />
-            <div style={{ padding: "0 20px", display: "flex", gap: "8px" }}>
+            <CardFooter>
               <ActionButton onClick={handleUpdate}>✅ Save</ActionButton>
-              <ActionButton onClick={() => { setIsEditing(false); setError(null); }}>❌ Cancel</ActionButton>
-            </div>
+            </CardFooter>
           </>
         ) : (
           <Message>{thought.message}</Message>
@@ -168,8 +174,12 @@ const ThoughtCard = ({ thought, onLike, onDelete, onUpdate }) => {
             <span>x {thought.hearts}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <ActionButton onClick={() => setIsEditing(true)} title="Edit">✏️</ActionButton>
-            <ActionButton onClick={handleDelete} title="Delete">🗑️</ActionButton>
+            {isOwner && (
+              <>
+                <ActionButton onClick={() => setIsEditing(true)} title="Edit">✏️</ActionButton>
+                <ActionButton onClick={handleDelete} title="Delete">🗑️</ActionButton>
+              </>
+            )}
             <span>{formatTimestamp(thought.createdAt)}</span>
           </div>
         </CardFooter>

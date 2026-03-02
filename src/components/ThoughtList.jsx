@@ -2,15 +2,13 @@ import React from "react";
 import styled from "styled-components";
 import ThoughtCard from "./ThoughtCard";
 
-
-// the list of messages 
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
 `;
 
-const ThoughtList = ({ thoughts, onLike }) => {
+const ThoughtList = ({ thoughts, onLike, onDelete, onUpdate }) => {
   return (
     <List>
       {thoughts.map((thought) => (
@@ -18,6 +16,8 @@ const ThoughtList = ({ thoughts, onLike }) => {
           key={thought._id}
           thought={thought}
           onLike={onLike}
+          onDelete={onDelete}
+          onUpdate={onUpdate}
         />
       ))}
     </List>

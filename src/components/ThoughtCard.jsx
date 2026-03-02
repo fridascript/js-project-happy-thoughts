@@ -1,9 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { formatTimestamp } from "../Data/timestampData";
 
-
-//styling for components
 const PageWrapper = styled.div`
   display: flex;
   justify-content: center;  
@@ -16,29 +14,18 @@ const Card = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: left;
-
   width: 90%;
   max-width: 620px;
-
   padding: 20px 0;
   min-height: 100px;
   margin-bottom: 30px;
-
   background: #ffffff;
   border: 2px solid black;
   box-shadow: 10px 10px;
 
-  @media (min-width: 768px) {
-    width: 100%;
-  }
-
-  @media (min-width: 1024px) {
-    width: 100%;
-  }
-
-  @media (min-width: 1400px) {
-    width: 100%;
-  }
+  @media (min-width: 768px) { width: 100%; }
+  @media (min-width: 1024px) { width: 100%; }
+  @media (min-width: 1400px) { width: 100%; }
 `;
 
 const Message = styled.p`
@@ -49,9 +36,20 @@ const Message = styled.p`
   overflow-wrap: break-word;
   white-space: normal;
 
-  @media (min-width: 768px) {
-    font-size: 20px;
-  }
+  @media (min-width: 768px) { font-size: 20px; }
+`;
+
+const EditInput = styled.textarea`
+  margin: 0;
+  font-size: 18px;
+  padding: 20px;
+  width: 100%;
+  border: 1px solid #ccc;
+  resize: none;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) { font-size: 20px; }
 `;
 
 const CardFooter = styled.div`
@@ -65,8 +63,8 @@ const CardFooter = styled.div`
 
   @media (min-width: 768px) {
     font-size: 14px;
-      width: 90%;
-      padding: 10px 20px 10px 40px;
+    width: 90%;
+    padding: 10px 20px 10px 40px;
   }
 `;
 
@@ -74,47 +72,106 @@ const LikeButton = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 32px;
   height: 32px;
   border-radius: 50%;
-
   background: ${(props) => (props.$liked ? "#f79f9f" : "#d5d3d3")};
   cursor: pointer;
-
   transition: transform 0.1s;
+  &:hover { transform: scale(1.1); }
 
-  &:hover {
-    transform: scale(1.1);
-  }
-
-  @media (min-width: 768px) {
-    width: 35px;
-    height: 35px;
-  }
+  @media (min-width: 768px) { width: 35px; height: 35px; }
 `;
 
+const ActionButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 6px;
+  &:hover { opacity: 0.7; }
+`;
 
-//component for the displayed message 
+const ErrorText = styled.p`
+  color: red;
+  font-size: 12px;
+  margin: 0;
+  padding: 0 20px;
+`;
 
-const ThoughtCard = ({ thought, onLike }) => {
+const ThoughtCard = ({ thought, onLike, onDelete, onUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedMessage, setEditedMessage] = useState(thought.message);
+  const [error, setError] = useState(null);
+
   const handleLike = () => onLike(thought._id);
+
+  const handleDelete = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`https://happy-thoughts-api-frida.onrender.com/thoughts/${thought._id}`, {
+        method: "DELETE",
+        headers: { Authorization: token }
+      });
+      if (!res.ok) throw new Error("Could not delete thought.");
+      onDelete(thought._id);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`https://happy-thoughts-api-frida.onrender.com/thoughts/${thought._id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token
+        },
+        body: JSON.stringify({ message: editedMessage })
+      });
+      if (!res.ok) throw new Error("Could not update thought.");
+      const updated = await res.json();
+      onUpdate(updated);
+      setIsEditing(false);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <PageWrapper>
       <Card>
-        <Message>{thought.message}</Message>
+        {isEditing ? (
+          <>
+            <EditInput
+              value={editedMessage}
+              onChange={(e) => setEditedMessage(e.target.value)}
+              rows={3}
+            />
+            <div style={{ padding: "0 20px", display: "flex", gap: "8px" }}>
+              <ActionButton onClick={handleUpdate}>✅ Save</ActionButton>
+              <ActionButton onClick={() => { setIsEditing(false); setError(null); }}>❌ Cancel</ActionButton>
+            </div>
+          </>
+        ) : (
+          <Message>{thought.message}</Message>
+        )}
+
+        {error && <ErrorText>{error}</ErrorText>}
+
         <CardFooter>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <LikeButton
-              onClick={handleLike}
-              $liked={thought.hearts > 0}
-            >
-              ❤️
-            </LikeButton>
+            <LikeButton onClick={handleLike} $liked={thought.hearts > 0}>❤️</LikeButton>
             <span>x {thought.hearts}</span>
           </div>
-          <span>{formatTimestamp(thought.createdAt)}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ActionButton onClick={() => setIsEditing(true)} title="Edit">✏️</ActionButton>
+            <ActionButton onClick={handleDelete} title="Delete">🗑️</ActionButton>
+            <span>{formatTimestamp(thought.createdAt)}</span>
+          </div>
         </CardFooter>
       </Card>
     </PageWrapper>

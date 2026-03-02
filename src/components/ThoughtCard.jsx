@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { formatTimestamp } from "../Data/timestampData";
 
+
 const PageWrapper = styled.div`
   display: flex;
   justify-content: center;  
@@ -100,46 +101,23 @@ const ErrorText = styled.p`
 `;
 
 const ThoughtCard = ({ thought, onLike, onDelete, onUpdate, user }) => {
-  const isOwner = user && thought.user === user.userId;
+ const isOwner = user && thought.user?.name === user.name;
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(thought.message);
-  const [error, setError] = useState(null);
+  console.log("thought.user:", thought.user);
+console.log("user:", user);
 
   const handleLike = () => onLike(thought._id);
 
-  const handleDelete = async () => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`https://js-project-api-7sb0.onrender.com/thoughts/${thought._id}`, {
-        method: "DELETE",
-        headers: { Authorization: token }
-      });
-      if (!res.ok) throw new Error("Could not delete thought.");
-      onDelete(thought._id);
-    } catch (err) {
-      setError(err.message);
-    }
+
+  const handleDelete = () => {
+    onDelete(thought._id);
   };
 
-  const handleUpdate = async () => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`https://js-project-api-7sb0.onrender.com/thoughts/${thought._id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token
-        },
-        body: JSON.stringify({ message: editedMessage })
-      });
-      if (!res.ok) throw new Error("Could not update thought.");
-      const updated = await res.json();
-      onUpdate(updated);
-      setIsEditing(false);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    }
+  const handleUpdate = () => {
+    if (!editedMessage.trim()) return;
+    onUpdate(thought._id, editedMessage);
+    setIsEditing(false);
   };
 
   return (
@@ -150,12 +128,6 @@ const ThoughtCard = ({ thought, onLike, onDelete, onUpdate, user }) => {
             <EditInput
               value={editedMessage}
               onChange={(e) => setEditedMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleUpdate();
-                }
-              }}
               rows={3}
             />
             <CardFooter>
@@ -166,13 +138,12 @@ const ThoughtCard = ({ thought, onLike, onDelete, onUpdate, user }) => {
           <Message>{thought.message}</Message>
         )}
 
-        {error && <ErrorText>{error}</ErrorText>}
-
         <CardFooter>
           <div style={{ display: "flex", alignItems: "center" }}>
             <LikeButton onClick={handleLike} $liked={thought.hearts > 0}>❤️</LikeButton>
             <span>x {thought.hearts}</span>
           </div>
+
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {isOwner && (
               <>

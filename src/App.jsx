@@ -6,118 +6,128 @@ import SignupForm from "./components/SignupForm";
 import Authorization from "./components/Authorization";
 import LoggedinAs from "./components/Logout";
 
-// API: happy thoughts 
-// const API (from original project) = "https://happy-thoughts-api-4ful.onrender.com/thoughts";
 const API_BASE = "https://js-project-api-7sb0.onrender.com";
 
 export const App = () => {
   const [thoughts, setThoughts] = useState([]);
   const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
-  const [user, setUser] = useState(null);
- 
+  const [user, setUser] = useState(
+      localStorage.getItem("userName") ? { name: localStorage.getItem("userName") } : null
+  );
 
-  // get thoughts from API
+  // fetch thoughts from API
   const fetchThoughts = () => {
-     fetch(`${API_BASE}/thoughts?sort=date`)
+    fetch(`${API_BASE}/thoughts?sort=date`)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.response[0]);
         setThoughts(data.response);
       })
       .catch((error) => {
-        console.error("Failed to fetch thoughts:", error)
+        console.error("Failed to fetch thoughts:", error);
       });
   };
 
-  // get thoughts when opening the site 
+  // fetch thoughts on load
   useEffect(() => {
     fetchThoughts();
   }, []);
 
-  // signup new user
+  // signup
   const handleSignup = (name, email, password) => {
-  fetch(`${API_BASE}/users`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password }),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.accessToken) {
-        setAccessToken(data.accessToken);
-        localStorage.setItem(
-          "accessToken",
-          data.accessToken
-        );
-        setUser({
-          userId: data.id,
-          name,
-          email,
-        });
-      } else {
-        console.error("Signup failed:", data.message);
-      }
+    fetch(`${API_BASE}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
     })
-    .catch((error) => {
-      console.error("Failed to signup:", error);
-    });
-};
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.accessToken) {
+          setAccessToken(data.accessToken);
+          localStorage.setItem("accessToken", data.accessToken);
+          localStorage.setItem("userName", name);
+          setUser({
+            userId: data.id,
+            name,
+            email,
+          });
+        } else {
+          console.error("Signup failed:", data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to signup:", error);
+      });
+  };
 
-   
-   // login user
+  // login
   const handleLogin = (email, password) => {
-  fetch(`${API_BASE}/sessions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success && data.response?.accessToken) {
-        setAccessToken(data.response.accessToken);
-        localStorage.setItem("accessToken", data.response.accessToken);
-        setUser({ userId: data.response.userId, name: data.response.name, email: data.response.email });
-      } else {
-        console.error("Login failed:", data.message || "Invalid credentials");
-      }
+    fetch(`${API_BASE}/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     })
-    .catch((error) => {
-      console.error("Failed to login:", error);
-    });
-};
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success && data.response?.accessToken) {
+          setAccessToken(data.response.accessToken);
+          localStorage.setItem("accessToken", data.response.accessToken);
+          localStorage.setItem("userName", data.response.name);
+          setUser({ 
+            userId: data.response.userId, 
+            name: data.response.name, 
+            email: data.response.email 
+          });
+        } else {
+          console.error("Login failed:", data.message || "Invalid credentials");
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to login:", error);
+      });
+  };
 
-  // logout user
+  // logout
   const handleLogout = () => {
     setAccessToken(null);
     setUser(null);
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("userName");
   };
 
-  // post a new thought (with authentication)
+  // post a new thought
   const addThought = (newMessage) => {
     if (!accessToken) {
       console.error("please log in to post a thoughts!");
       return;
     }
-      fetch(`${API_BASE}/thoughts`, {
+
+    fetch(`${API_BASE}/thoughts`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": accessToken },
-      body: JSON.stringify({ message: newMessage })
+      headers: { 
+        "Content-Type": "application/json", 
+        "Authorization": accessToken 
+      },
+      body: JSON.stringify({ message: newMessage }),
     })
       .then((response) => response.json())
       .then((data) => {
-        if (data.success){
-        setThoughts((prev) => [data.response, ...prev]);
+        if (data.success) {
+          // Add userId locally so edit/delete works immediately
+          const newThoughtWithUser = {
+            ...data.response,
+            userId: user.userId,
+          };
+          setThoughts((prev) => [newThoughtWithUser, ...prev]);
         } else {
-          console.error("Failed to post thought:" + data.message)
+          console.error("Failed to post thought:" + data.message);
         }
       })
-       .catch((error) => {
-        console.error("Failed to add thought:", error)
+      .catch((error) => {
+        console.error("Failed to add thought:", error);
       });
   };
 
-   // update a thought (with authentication)
+  // update thought
   const updateThought = (id, newMessage) => {
     if (!accessToken) {
       console.error("Please log in to update a thought!");
@@ -128,14 +138,14 @@ export const App = () => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": accessToken
+        "Authorization": accessToken,
       },
-      body: JSON.stringify({ message: newMessage })
+      body: JSON.stringify({ message: newMessage }),
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          fetchThoughts(); // refresh list
+          fetchThoughts();
         } else {
           console.error("Failed to update: " + data.message);
         }
@@ -145,27 +155,23 @@ export const App = () => {
       });
   };
 
-    // delete a thought (with authentication)
+  // delete thought
   const deleteThought = (id) => {
     if (!accessToken) {
       console.error("Please log in to delete a thought!");
       return;
     }
 
-    if (!window.confirm("Are you sure you want to delete this thought?")) {
-      return;
-    }
+    if (!window.confirm("Are you sure you want to delete this thought?")) return;
 
     fetch(`${API_BASE}/thoughts/${id}`, {
       method: "DELETE",
-      headers: {
-        "Authorization": accessToken
-      }
+      headers: { "Authorization": accessToken },
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          fetchThoughts(); // refresh list
+          fetchThoughts();
         } else {
           console.error("Failed to delete: " + data.message);
         }
@@ -175,26 +181,17 @@ export const App = () => {
       });
   };
 
-  // like a post 
+  // like thought
   const likeThought = (id) => {
-    fetch(`${API_BASE}/thoughts/${id}/like`, {
-      method: "PATCH"
-    })
-      .then(() => {
-        fetchThoughts();
-      })
-       .catch((error) => {
-        console.error("Failed to like thoughts:", error)
-      });
+    fetch(`${API_BASE}/thoughts/${id}/like`, { method: "PATCH" })
+      .then(() => fetchThoughts())
+      .catch((error) => console.error("Failed to like thoughts:", error));
   };
 
   return (
     <div>
       {!accessToken ? (
-        <Authorization
-          onLogin={handleLogin}
-          onSignup={handleSignup}
-        />
+        <Authorization onLogin={handleLogin} onSignup={handleSignup} />
       ) : (
         <>
           <LoggedinAs user={user} onLogout={handleLogout} />
@@ -204,7 +201,7 @@ export const App = () => {
             onLike={likeThought}
             onUpdate={updateThought}
             onDelete={deleteThought}
-            user={user}  
+            user={user}
             isLoggedIn
           />
         </>
